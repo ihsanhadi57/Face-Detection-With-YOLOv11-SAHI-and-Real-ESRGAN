@@ -1,0 +1,12 @@
+Model Name,Sub Folder,ImgSz,Batch,Best Epoch,mAP@0.5,mAP@0.5:0.95,Precision,Recall
+yolo11l-pose-default,yolo11l_pose_default_960_8,960,8,100,0.43748,0.42840,0.74792,0.41350
+yolo11m-pose-custom-repeat,yolo11m_pose_p2p5_768_2x2,768,4,55,0.42212,0.41113,0.74561,0.40324
+yolo11m-pose-default,yolo11m_pose_default_960_12,960,8,100,0.43401,0.42454,0.74872,0.41244
+yolo11n-pose-custom,yolo11n_pose_p2p3p4,768,8,100,0.42248,0.41172,0.74560,0.40348
+yolo11n-pose-custom-repeat,yolo11n_pose_p2p5_960,960,4,100,0.42834,0.41833,0.75352,0.40672
+yolo11n-pose-default,yolo11n_pose_default_1024_16,1024,16,100,0.42368,0.40781,0.74607,0.40572
+yolo11s-pose-custom,yolo11s_pose_p2p3p4,768,4,100,0.41739,0.40128,0.74972,0.39511
+yolo11s-pose-custom-repeat,yolo11s_pose_p2p5_960,960,4,99,0.42705,0.41684,0.75221,0.40654
+yolo11s-pose-custom-tuned,yolo11s_pose_p2p3p4,960,4,100,0.42608,0.41658,0.75722,0.40248
+yolo11s-pose-default,yolo_default,768,4,97,0.42713,0.41029,0.75086,0.40330
+yolo11s-pose-max,yolo11s_pose,1024,16,99,0.43212,0.42168,0.75455,0.41205

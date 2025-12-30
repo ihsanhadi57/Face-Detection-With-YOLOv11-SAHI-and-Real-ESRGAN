@@ -1,0 +1,160 @@
+Baik, berikut adalah penjelasan mendetail untuk file `app.py` dan `utils/insightface_wrapper.py`.
+
+### Bagian 1: Penjelasan Wrapper Model (`utils/insightface_wrapper.py`)
+
+Wrapper ini adalah "jembatan" yang sangat penting. Library `sahi` dirancang untuk bisa bekerja dengan berbagai model deteksi objek, tetapi ia tidak tahu secara spesifik bagaimana cara menjalankan model `insightface`. Wrapper ini memberitahu `sahi` cara berkomunikasi dengan `insightface`.
+
+**Struktur File:**
+File ini mendefinisikan sebuah kelas `InsightFaceDetectionModel` yang mewarisi (`inherits`) dari kelas `DetectionModel` milik `sahi`. Dengan mewarisi `DetectionModel`, kelas kita "berjanji" untuk menyediakan fungsi-fungsi standar yang diharapkan oleh `sahi`, seperti `load_model`, `perform_inference`, dll.
+
+**Penjelasan Kode:**
+
+- **`__init__(self, ...)`**: Ini adalah *constructor* kelas.
+    - Ia menerima `confidence_threshold` (ambang batas kepercayaan) dan `providers` (misalnya, `['CPUExecutionProvider']` atau `['CUDAExecutionProvider']` untuk GPU).
+    - `super().__init__(...)` memanggil constructor dari kelas induk (`DetectionModel`) untuk melakukan inisialisasi standar `sahi`.
+
+- **`load_model(self)`**: Fungsi ini dipanggil oleh `sahi` untuk memuat model ke dalam memori.
+    - `self.model = FaceAnalysis(providers=providers)`: Ini adalah baris kunci. Di sinilah model `insightface` sebenarnya diinisialisasi. `FaceAnalysis` adalah kelas dari library `insightface` yang menangani analisis wajah.
+    - `self.model.prepare(...)`: Fungsi ini menyiapkan model untuk deteksi. `ctx_id` diatur ke `-1` untuk CPU atau `0` untuk GPU, dan `det_size` (ukuran deteksi) diatur ke 640x640. Ini berarti gambar akan diubah ukurannya ke 640x640 sebelum deteksi untuk konsistensi.
+    - `self.category_mapping = {'0': 'face'}`: Mendefinisikan bahwa kategori deteksi adalah "face".
+
+- **`perform_inference(self, image: np.ndarray)`**: Ini adalah fungsi inti yang menjalankan deteksi.
+    - `sahi` akan memanggil fungsi ini dan memberikan potongan gambar (`image`) sebagai array NumPy.
+    - `faces = self.model.get(image)`: Di sinilah deteksi wajah yang sebenarnya terjadi. `self.model` (yang merupakan `FaceAnalysis` dari `insightface`) dijalankan pada gambar, dan hasilnya (daftar wajah) disimpan.
+    - `self._original_predictions = faces`: Hasil mentah dari `insightface` disimpan dalam variabel internal `sahi`.
+
+- **`_create_object_prediction_list_from_original_predictions(...)`**: Fungsi ini menerjemahkan hasil mentah dari `insightface` menjadi format standar yang dimengerti `sahi`.
+    - `insightface` mengembalikan objek `face` dengan properti seperti `face.det_score` (skor kepercayaan) dan `face.bbox` (koordinat kotak pembatas).
+    - Fungsi ini melakukan iterasi pada setiap `face` yang ditemukan.
+    - Untuk setiap `face`, ia membuat objek `ObjectPrediction`. Ini adalah kelas standar `sahi` untuk menyimpan satu hasil deteksi.
+    - Objek `ObjectPrediction` ini berisi `bbox`, `category_name` ('face'), dan `score`.
+    - Hasilnya, `sahi` sekarang memiliki daftar prediksi dalam format yang seragam, tidak peduli model apa yang digunakan di belakang layar.
+
+- **`@property` `num_categories`, `has_mask`, `category_names`**: Ini adalah properti yang memberikan informasi meta tentang model ke `sahi`, seperti jumlah kategori yang bisa dideteksi (hanya 1, yaitu "face") dan apakah model ini mendukung *masking* (tidak).
+
+---
+
+### Bagian 2: Penjelasan Detail `app.py`
+
+Skrip ini adalah pipeline non-interaktif untuk menjalankan deteksi dan enhancement pada satu gambar.
+
+**Baris 1-9: Impor Pustaka**
+- `os`: Untuk berinteraksi dengan sistem operasi, seperti membuat direktori (`os.makedirs`) dan menggabungkan path file (`os.path.join`).
+- `re`: *Regular Expressions*, digunakan untuk membersihkan nama file dari karakter yang tidak diinginkan.
+- `time`: Untuk mengukur waktu eksekusi suatu proses.
+- `from sahi.predict import get_sliced_prediction`: Ini adalah fungsi utama dari `sahi` yang akan kita gunakan. Fungsi ini mengotomatiskan proses pemotongan gambar, deteksi, dan penggabungan hasil.
+- `from utils.insightface_wrapper import InsightFaceDetectionModel`: **Ini adalah impor krusial**. Di sinilah kita mengimpor "jembatan" atau wrapper yang telah kita bahas di Bagian 1.
+- `from utils.visualization import ...`: Mengimpor fungsi bantuan untuk menggambar kotak deteksi dan menyimpan ringkasan.
+- `from utils.enhancer import ...`: Mengimpor fungsi bantuan untuk melakukan peningkatan kualitas (enhancement) pada wajah.
+- `from PIL import Image`: Digunakan untuk membuka gambar dan mendapatkan dimensinya (lebar dan tinggi).
+
+**Baris 11-14: Konfigurasi Awal**
+- `detection_model = InsightFaceDetectionModel(confidence_threshold=0.5)`: Di sini, kita membuat instance dari wrapper kita. `sahi` sekarang tahu bahwa setiap kali ia perlu melakukan deteksi, ia harus menggunakan objek ini. Ambang kepercayaan diatur ke 0.5, artinya hanya deteksi dengan skor 50% atau lebih yang akan dipertimbangkan.
+- `source_image_dir`, `output_dir`: Mendefinisikan path folder input dan output.
+- `os.makedirs(output_dir, exist_ok=True)`: Membuat folder output jika belum ada.
+
+**Baris 17-22: Pemilihan Gambar**
+- `test_image_name = "foto abel.jpg"`: Nama file gambar target ditentukan secara langsung di dalam kode (hardcoded).
+- `os.path.join(...)`: Menggabungkan path direktori dan nama file untuk mendapatkan path lengkap.
+- `if not os.path.exists(...)`: Pemeriksaan untuk memastikan file gambar benar-benar ada sebelum melanjutkan.
+
+**Baris 26-32: Persiapan Direktori & Nama File Output**
+- `clean_name = re.sub(...)`: Membersihkan nama file. Contoh: `20_Family_Group.jpg` menjadi `20_Family_Group_jpg`. Ini mencegah error karena karakter ilegal dalam nama folder/file.
+- `result_dir = os.path.join(...)`: Membuat path unik untuk menyimpan semua hasil dari gambar ini, misalnya `data/output/result_foto_abel`.
+- `crops_dir`, `visual_output_path`, `..._summary_path`: Mendefinisikan path lengkap untuk setiap file output yang akan dibuat.
+
+**Baris 34-42: Logika Ukuran Slice Adaptif**
+- Ini adalah bagian yang cerdas. Tujuannya adalah untuk menghindari pemotongan yang tidak efisien pada gambar kecil.
+- `base_slice_size = 512`: Ukuran slice default adalah 512x512.
+- `with Image.open(...)`: Membuka gambar untuk mendapatkan `img_width` dan `img_height`.
+- `slice_height = img_height // 2 if img_height < base_slice_size * 1.5 else base_slice_size`: Logika utamanya. Jika tinggi gambar lebih kecil dari 1.5x ukuran slice dasar (768 piksel), maka tinggi slice diatur menjadi setengah tinggi gambar. Jika tidak, digunakan ukuran 512. Hal yang sama berlaku untuk lebar. Ini memastikan gambar kecil tidak dipecah menjadi terlalu banyak bagian kecil.
+
+**Baris 44-54: Tahap 1: Deteksi Wajah (SAHI)**
+- `start_time = time.time()`: Mencatat waktu mulai.
+- `detection_result = get_sliced_prediction(...)`: **Ini adalah inti dari proses deteksi.**
+    - `image=test_image_path`: Gambar yang akan diproses.
+    - `detection_model=detection_model`: Model yang akan digunakan (wrapper `InsightFace` kita).
+    - `slice_height`, `slice_width`: Ukuran potongan yang sudah kita hitung secara adaptif.
+    - `overlap_height_ratio=0.2`: Setiap potongan akan tumpang tindih (overlap) sebesar 20% dengan potongan di atas/bawahnya. Ini penting untuk mendeteksi wajah yang berada di perbatasan antar potongan.
+    - `overlap_width_ratio=0.2`: Sama, tetapi untuk tumpang tindih kiri/kanan.
+- `detection_time = time.time() - start_time`: Menghitung total waktu deteksi.
+
+**Baris 56-74: Tahap 2: Cropping dan Visualisasi**
+- `draw_detections(...)`: Memanggil fungsi bantuan untuk menggambar kotak-kotak hasil deteksi pada gambar asli dan menyimpannya.
+- `if detection_result.object_prediction_list:`: Mengecek apakah ada wajah yang ditemukan.
+- `save_face_crops(...)`: Jika ada, panggil fungsi bantuan untuk memotong setiap wajah dan menyimpannya sebagai file terpisah.
+- `create_detection_summary(...)`: Membuat file teks yang berisi statistik proses deteksi.
+
+**Baris 76-103: Tahap 3: Enhancement Wajah**
+- `if saved_crops:`: Mengecek apakah ada potongan wajah yang berhasil disimpan dari tahap sebelumnya.
+- `ENHANCEMENT_CONFIG`: Sebuah dictionary yang berisi konfigurasi untuk model Real-ESRGAN (model, skala pembesaran, dll).
+- `enhancer = FaceEnhancer(**ENHANCEMENT_CONFIG)`: Membuat instance dari kelas enhancer.
+- `enhance_face_crops_batch(...)`: Memanggil fungsi bantuan yang akan melakukan iterasi pada semua file potongan wajah dan menerapkan model enhancement pada masing-masing.
+- `create_enhancement_summary(...)`: Membuat file teks ringkasan untuk proses enhancement.
+
+**Baris 107-108: Entry Point**
+- `if __name__ == "__main__":`: Ini adalah konstruksi standar Python. Kode di dalam blok ini hanya akan berjalan jika file `app.py` dieksekusi secara langsung (bukan diimpor sebagai modul oleh file lain).
+- `main()`: Memanggil fungsi utama untuk memulai seluruh pipeline.
+
+---
+
+### Bagian 3: Penjelasan File Bantuan (`utils/enhancer.py`)
+
+File ini bertanggung jawab untuk semua tugas yang berkaitan dengan peningkatan kualitas (enhancement) gambar wajah menggunakan Real-ESRGAN.
+
+**Struktur File:**
+- **`FaceEnhancer` (Class)**: Kelas utama yang membungkus fungsionalitas model Real-ESRGAN.
+- **`enhance_face_crops_batch` (Function)**: Fungsi untuk memproses banyak gambar wajah secara berurutan.
+- **`create_enhancement_summary` (Function)**: Fungsi untuk membuat laporan teks dari hasil batch enhancement.
+
+**Penjelasan Detail `FaceEnhancer` (Class):**
+- **`__init__(self, ...)`**: Constructor.
+    - Memeriksa ketersediaan CUDA (GPU) dan memilih perangkat (`cpu` atau `cuda`).
+    - Memanggil `_setup_model` untuk memuat model Real-ESRGAN. Proses ini sangat detail, ia mencari file model `.pth` di beberapa lokasi umum, dan jika tidak ditemukan, ia akan mengandalkan `RealESRGANer` untuk mengunduhnya secara otomatis.
+- **`_setup_model(self, ...)`**: Mengonfigurasi dan memuat model `RealESRGANer`.
+    - Ia memilih arsitektur `RRDBNet` yang sesuai berdasarkan nama model.
+    - Ia menginisialisasi `RealESRGANer` dengan parameter seperti skala, path model, dan ukuran *tile* (potongan kecil untuk memproses gambar besar agar tidak kehabisan memori).
+- **`enhance_image(self, image)`**: Fungsi inti untuk melakukan enhancement pada satu gambar.
+    - Menerima gambar (dalam format `cv2` atau `PIL.Image`).
+    - Memanggil `self.upsampler.enhance(image, ...)` yang merupakan fungsi dari `RealESRGANer` untuk melakukan upscaling.
+    - Memiliki mekanisme *fallback*: jika kehabisan memori CUDA, ia akan mencoba lagi dengan ukuran *tile* yang lebih kecil.
+- **`enhance_face_crop(self, ...)`**: Fungsi yang lebih spesifik untuk menangani satu file potongan wajah. Ia membaca gambar, memanggil `enhance_image`, lalu menyimpan hasilnya.
+
+**Penjelasan Fungsi Lainnya:**
+- **`enhance_face_crops_batch(...)`**: Fungsi ini sangat berguna untuk efisiensi.
+    - Ia mengambil direktori berisi potongan-potongan wajah (`crops_dir`).
+    - Membuat direktori output baru untuk hasil enhancement.
+    - Melakukan iterasi (loop) pada setiap file gambar di `crops_dir`.
+    - Untuk setiap gambar, ia memanggil metode `enhancer.enhance_face_crop`.
+    - Ia mengumpulkan statistik (jumlah berhasil, gagal, total waktu) dan mencetaknya di akhir.
+- **`create_enhancement_summary(...)`**: Fungsi ini mengambil data statistik dari `enhance_face_crops_batch` dan memformatnya menjadi laporan `.txt` yang rapi dan mudah dibaca, lengkap dengan detail untuk setiap file yang berhasil diproses.
+
+---
+
+### Bagian 4: Penjelasan File Bantuan (`utils/visualization.py`)
+
+File ini berisi fungsi-fungsi yang membantu dalam memvisualisasikan hasil deteksi dan mengelola data output.
+
+**Penjelasan Fungsi:**
+
+- **`draw_detections(...)`**: Fungsi ini bertugas membuat output visual.
+    - Ia membaca gambar asli menggunakan `cv2.imread`.
+    - Melakukan iterasi pada setiap deteksi (`ObjectPrediction`) yang ada di dalam `result.object_prediction_list`.
+    - Untuk setiap deteksi, ia mengambil koordinat kotak pembatas (`bbox`) dan skor kepercayaan (`score`).
+    - Menggunakan `cv2.rectangle` untuk menggambar kotak merah di sekeliling wajah yang terdeteksi.
+    - Menggunakan `cv2.putText` untuk menuliskan skor kepercayaan di atas kotak, lengkap dengan latar belakang berwarna agar mudah dibaca.
+    - Menambahkan judul di bagian atas gambar yang menunjukkan jumlah total wajah yang ditemukan.
+    - Terakhir, menyimpan gambar yang sudah dimodifikasi ini ke `output_path` menggunakan `cv2.imwrite`.
+
+- **`save_face_crops(...)`**: Fungsi ini bertugas untuk mengekstrak dan menyimpan setiap wajah yang terdeteksi sebagai file terpisah.
+    - Ia juga membaca gambar asli.
+    - Melakukan iterasi pada setiap deteksi.
+    - Menggunakan koordinat `bbox` untuk "memotong" (slice/crop) bagian gambar yang berisi wajah. `face_crop = image[y1:y2, x1:x2]` adalah operasi slicing array NumPy yang melakukan ini.
+    - Menyimpan setiap potongan wajah sebagai file `.jpg` baru di dalam `output_dir`. Nama filenya dibuat informatif, mengandung nomor urut dan skor kepercayaan, contoh: `face_crop_1_conf_0.98.jpg`.
+    - Mengembalikan daftar path dari semua file yang berhasil disimpan.
+
+- **`create_detection_summary(...)`**: Fungsi ini bertugas membuat laporan teks dari hasil deteksi.
+    - Ia mengumpulkan semua data penting: jumlah wajah, waktu proses, ukuran gambar, dan parameter *slicing*.
+    - Menghitung statistik tambahan seperti rata-rata, minimum, dan maksimum skor kepercayaan.
+    - Memformat semua informasi ini menjadi string yang terstruktur dan mudah dibaca.
+    - Menulis string ringkasan ini ke dalam file teks di `output_path`.

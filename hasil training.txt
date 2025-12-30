@@ -1,0 +1,12 @@
+Tabel 5.1. Hasil Komparatif Eksperimen Pelatihan Fase 1 (Pada Best Epoch)
+Kode	Arsitektur & Konfigurasi	Input Size	Batch	Best Epoch 	mAP @0.5 (Val)	mAP @0.5:0.95	Precision	Recall
+(a)	yolo11n-pose-default	        1024	    16	        97	    0.7228	        0.4109	        0.8628	    0.6450
+(b)	yolo11n-pose-custom	            768	        8	        93	    0.7319	        0.4188	        0.8630	    0.6596
+(c)	yolo11n-pose-custom-repeat	    960	        4	        99	    0.7334	        0.4238	        0.8730	    0.6533
+(d)	yolo11s-pose-default	        1024	    16	        98	    0.7537	        0.4356	        0.8658	    0.6848
+(e)	yolo11s-pose-custom	            960	        4           92	    0.7272	        0.4181	        0.8793	    0.6408
+(f)	yolo11s-pose-custom-repeat	    960	        4	        96	    0.7307	        0.4202	        0.8690	    0.6488
+(g)	yolo11m-pose-default	        960	        8	        100	    0.7571	        0.4368	        0.8692	    0.6908
+(h)	yolo11m-pose-custom-repeat	    768	        4	        55	    0.7206	        0.4124	        0.8704	    0.6382
+(i)	yolo11m-pose-custom	            768	        4	        97	    0.72517	        0.4176	        0.8620	    0.6446
+(j)	yolo11l-pose-default	        960	        8	        99	    0.7612	        0.4419	        0.8696	    0.6896

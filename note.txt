@@ -1,0 +1,45 @@
+ Hasil yang Anda dapatkan sangat menarik dan justru merupakan temuan penting dalam sebuah penelitian. Jangan berkecil hati, ini adalah inti dari 
+  proses riset: menemukan sesuatu yang tidak terduga. Mari kita bedah bersama.
+
+  ### Analisis: Mengapa Hasilnya Menurun?
+
+
+  Penurunan mAP dari 0.6807 menjadi 0.6604 setelah menggunakan Real-ESRGAN adalah temuan yang sangat valid. Ini bukan berarti Anda gagal, tapi Anda 
+  menemukan sebuah batasan. Kemungkinan besar penyebabnya adalah:
+
+
+   1. Artefak Generatif (Halusinasi Model): Real-ESRGAN adalah model generatif. Ia tidak "memperbaiki" gambar, melainkan "berhalusinasi" atau menebak 
+      detail-detail yang hilang untuk membuat gambar terlihat tajam bagi mata manusia. Detail buatan ini mungkin terlihat bagus, tetapi memiliki tekstur 
+      yang tidak natural. Model RetinaFace, yang dilatih pada gambar-gambar asli, bisa menjadi "bingung" oleh tekstur buatan ini, sehingga keyakinannya 
+      menurun atau bahkan gagal mendeteksi wajah.
+  Hasil Anda sudah merupakan kontribusi. Sekarang, bagaimana kita memperkuatnya? Anda punya beberapa pilihan strategis:
+
+  #### Opsi 1: Menganalisis & Memperkuat "Hasil Negatif" (Rekomendasi Utama)
+
+  Ini adalah pendekatan riset yang paling kuat. Anda tidak hanya melaporkan angka, tetapi juga menjawab "mengapa".
+
+
+   * Analisis Kegagalan: Lakukan analisis kualitatif. Cari beberapa contoh gambar di mana RetinaFace+SAHI berhasil mendeteksi wajah, tetapi 
+     ESRGAN+RetinaFace+SAHI gagal. Apakah wajah-wajah yang gagal itu kecil? Blur? Apakah artefak ESRGAN terlihat jelas di sana? Visualisasi ini akan 
+     menjadi "daging" dari pembahasan skripsi Anda.
+  Jika tujuan utamanya adalah untuk membuktikan bahwa enhancement bisa meningkatkan deteksi.
+
+
+   * Fine-Tuning Detector: Ini adalah cara yang paling "benar" secara akademis. Lakukan fine-tuning pada model RetinaFace Anda menggunakan dataset 
+     latih (misalnya WIDER FACE Train) yang semua gambarnya sudah Anda proses terlebih dahulu dengan pipeline Real-ESRGAN x2 Anda. Ini akan 
+     "mengajarkan" RetinaFace untuk terbiasa dengan artefak dan tekstur dari Real-ESRGAN. Jika setelah ini mAP meningkat, Anda telah membuktikan bahwa 
+     domain shift adalah masalahnya dan Anda berhasil mengatasinya.
+  Jadi, Apakah Hasil Ini Tidak Apa-Apa Dalam Skripsi?
+  Sangat tidak apa-apa, bahkan ini bagus. Skripsi yang baik tidak harus selalu menunjukkan "hasil positif" atau angka yang terus meningkat. Skripsi 
+  yang kuat adalah yang:
+  1.  Memiliki metodologi yang jelas.
+  2.  Menghasilkan temuan yang jelas (bahkan jika itu temuan "negatif").
+  3.  Mampu menganalisis dan menjelaskan mengapa temuan itu terjadi.
+  4.  Memberikan wawasan baru bagi pembaca/peneliti selanjutnya.
+
+
+  Menemukan bahwa "metode SOTA (State-of-the-Art) untuk super-resolusi ternyata dapat menurunkan akurasi deteksi wajah pada kondisi tertentu" adalah
+  kontribusi riset yang berharga.
+
+
+ 

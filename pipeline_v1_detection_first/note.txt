@@ -1,0 +1,29 @@
+  Perbandingan Hasil mAP: RetinaFace vs. RetinaFace + SAHI
+  | Kategori | RetinaFace (Standar) | RetinaFace + SAHI | Peningkatan |
+  | :---     | :---                 | :---              | :---        |
+  | Easy     | 0.923                | 0.944             | +2.27%      |
+  | Medium   | 0.887                | 0.927             | +4.51%      |
+  | Hard     | 0.622                | 0.837             | +34.55%     |
+
+  ---
+
+
+  Analisis Hasil
+   1. Peningkatan di Semua Kategori: Penggunaan SAHI secara konsisten meningkatkan performa deteksi RetinaFace di semua tingkat kesulitan (Easy, Medium,
+      dan Hard). Tidak ada kategori yang mengalami penurunan performa.
+   2. Peningkatan Paling Signifikan pada Kategori "Hard": Peningkatan yang paling dramatis dan signifikan terjadi pada kategori "Hard", dengan
+      peningkatan AP sebesar 34.55%. Ini adalah temuan yang sangat kuat. Kategori "Hard" pada dataset WIDER FACE terkenal berisi wajah-wajah yang sangat
+      kecil, tidak jelas, atau terhalang (oklusi). Peningkatan masif ini membuktikan hipotesis utama penggunaan SAHI: dengan memotong gambar menjadi
+      bagian-bagian yang lebih kecil, model dapat mendeteksi objek (dalam hal ini, wajah) berukuran kecil yang mungkin terlewatkan saat memproses gambar
+      dalam resolusi penuh.
+   3. Peningkatan Solid pada Kategori "Medium" dan "Easy": Meskipun tidak sedramatis kategori "Hard", peningkatan pada kategori "Medium" (+4.51%) dan
+      "Easy" (+2.27%) tetap menunjukkan bahwa SAHI memberikan keuntungan bahkan ketika wajah tidak terlalu kecil. Ini menunjukkan bahwa SAHI tidak hanya
+      berguna untuk kasus ekstrim, tetapi juga secara umum dapat meningkatkan keandalan deteksi.
+  Kesimpulan untuk Skripsi
+  Untuk laporan skripsi Anda, Anda dapat menyimpulkan dengan keyakinan bahwa:
+  "Integrasi metode Sliced Aided Hyper Inference (SAHI) dengan model RetinaFace terbukti secara signifikan meningkatkan akurasi deteksi wajah pada
+  dataset WIDER FACE. Peningkatan paling substansial teramati pada subset 'Hard' (peningkatan AP 34.55%), yang mengonfirmasi bahwa teknik slicing
+  sangat efektif dalam mengatasi tantangan deteksi wajah berukuran kecil. Dengan demikian, dapat disimpulkan bahwa arsitektur RetinaFace+SAHI
+  merupakan pendekatan yang superior dibandingkan RetinaFace standar untuk kasus penggunaan yang melibatkan deteksi objek skala kecil dalam gambar
+  beresolusi tinggi."
+

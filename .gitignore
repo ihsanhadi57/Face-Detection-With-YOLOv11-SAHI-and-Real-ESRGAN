@@ -1,0 +1,19 @@
+# Dataset & hasil
+data/
+runs/
+eval_results/
+output/
+
+# Models
+models/*.pt
+models/*.onnx
+
+# Python
+__pycache__/
+*.pyc
+.env
+.venv
+
+# Editor
+.vscode/
+.idea/

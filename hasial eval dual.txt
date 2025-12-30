@@ -1,0 +1,5 @@
+Deskripsi Pipeline	        Easy	Medium	Hard	Overall mAP	Peningkatan (vs Baseline)
+Baseline (Best Model Only)	90.8%	90.8%	63.2%	81.59%	-
+Best Model + SAHI	        87.4%	88.6%	78.7%	84.89%	+3.30%
+Real-ESRGAN + Best Model	90.8%	90.8%	63.2%	81.58%	-0.01%
+Pipeline Lengkap	        81.3 %	83.8%	74.9%	80.00%	- 1.59%
