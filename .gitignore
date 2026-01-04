@@ -5,8 +5,7 @@ eval_results/
 output/
 
 # Models
-models/*.pt
-models/*.onnx
+models/
 
 # Python
 __pycache__/
