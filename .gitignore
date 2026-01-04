@@ -17,3 +17,7 @@ __pycache__/
 # Editor
 .vscode/
 .idea/
+
+# Temp
+temp_streamlit/
+temp_streamlit_batch/
